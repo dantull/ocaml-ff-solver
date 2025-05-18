@@ -1,0 +1,4 @@
+(executable
+ (public_name ff-solver)
+ (name main)
+ (libraries ff_solver))
