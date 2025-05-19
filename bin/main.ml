@@ -38,5 +38,17 @@ let to_string card =
       rank_str ^ suit_str
   | Tarot (T n) -> "t" ^ (string_of_int n);;
 
-let cards = [Suited (A, Thorn); Suited (J, Goblet); Suited (Q, Sword); Suited(K, Coin); Suited(N(2), Thorn); Tarot(T(1))] in
+let rec range i j acc =
+  if i = j then acc
+  else if i < j then range (i + 1) j (i :: acc)
+  else range j i acc;;
+
+let make_deck _ =
+  let ns = List.map (fun n -> N(n)) (range 2 11 []) in
+  let ranks = J :: Q :: K :: ns in
+  let suited_cards s = List.map (fun r -> Suited(r, s)) ranks in
+  let tarots = List.map (fun n -> Tarot(T(n))) (range 0 22 []) in
+  List.concat (tarots::(List.map suited_cards [Thorn; Goblet; Sword; Coin]));;
+
+let cards = make_deck () in
   print_endline(String.concat "\n" (List.map to_string cards));;
