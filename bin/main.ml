@@ -58,23 +58,54 @@ let make_deck _ =
   let tarots = List.map (fun n -> Tarot(T(n))) (range 0 22 []) in
   List.concat (tarots::(List.map suited_cards all_suits));;
 
-let make_game _ =
+  let shuffle_cards cards =
+    let arr = Array.of_list cards in
+    let len = Array.length arr in
+    for i = len - 1 downto 1 do
+      let j = Random.int (i + 1) in
+      let tmp = arr.(i) in
+      arr.(i) <- arr.(j);
+      arr.(j) <- tmp
+    done;
+    arr
+  ;;
+
+  let partition n arr =
+    if n <= 0 then invalid_arg "partition: n must be positive"
+    else
+      let len = Array.length arr in
+      let rec aux i acc =
+        if i >= len then List.rev acc
+        else
+          let last = min (i + n) len in
+          let group = Array.sub arr i (last - i) |> Array.to_list in
+          aux last (group :: acc)
+      in
+      aux 0 []
+  ;;
+
+let make_game cards =
+  let shuffled = shuffle_cards cards in
   {
-    stacks = List.map (fun _ -> []) (range 0 11 []);
+    stacks = [] :: partition 7 shuffled;
     stash = None;
     foundations = ([Tarot(T(-1))] :: [Tarot(T(22))] :: List.map (fun s -> [Suited(A, s)]) all_suits)
   };;
 
-let as_card_list stash =
+let stash_str stash =
   match stash with
-    | None -> []
-    | Some card -> [card]
-  
-let show_game game_state =
-  List.flatten [[(as_card_list game_state.stash)]; game_state.stacks; game_state.foundations];;
+    | None -> ""
+    | Some card -> to_string card
 
-let g = make_game () in
-let cards = make_deck () in
-let more_cards = show_game g in
-let all_cards = List.append [cards] more_cards in
-  print_endline(String.concat "\n" (List.map to_string (List.flatten all_cards)));;
+let stack_str cards =
+  String.concat " " (List.map to_string cards)
+
+let show_game gs =
+  let stash_msg = String.concat "" ["stash: "; (stash_str gs.stash)] in
+  let f_lines = List.map stack_str gs.foundations in
+  let s_lines = List.map stack_str gs.stacks in
+  stash_msg :: List.flatten [f_lines; s_lines];;
+
+let g = make_game (make_deck ()) in
+let game_lines = show_game g in
+  print_endline(String.concat "\n" game_lines);;
