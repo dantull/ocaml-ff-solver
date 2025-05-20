@@ -84,10 +84,18 @@ let make_deck _ =
       aux 0 []
   ;;
 
+let rec insert_at n elt lst acc =
+  if n = 0 then
+    acc @ [elt] @ lst
+  else
+    match lst with
+    | [] -> acc @ [elt]
+    | fst :: rest -> insert_at (n - 1) elt rest (fst :: acc)
+
 let make_game cards =
   let shuffled = shuffle_cards cards in
   {
-    stacks = [] :: partition 7 shuffled;
+    stacks = insert_at 5 [] (partition 7 shuffled) [];
     stash = None;
     foundations = ([Tarot(T(-1))] :: [Tarot(T(22))] :: List.map (fun s -> [Suited(A, s)]) all_suits)
   };;
