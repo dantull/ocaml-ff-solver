@@ -86,10 +86,10 @@ let make_deck _ =
 
 let rec insert_at n elt lst acc =
   if n = 0 then
-    acc @ [elt] @ lst
+    List.rev acc @ [elt] @ lst
   else
     match lst with
-    | [] -> acc @ [elt]
+    | [] -> List.rev acc @ [elt]
     | fst :: rest -> insert_at (n - 1) elt rest (fst :: acc)
 
 let make_game cards =
