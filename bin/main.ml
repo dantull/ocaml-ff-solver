@@ -49,6 +49,31 @@ let rec range i j acc =
   else if i < j then range (i + 1) j (i :: acc)
   else range j i acc;;
 
+let is_adjacent r1 r2 =
+  match (r1, r2) with
+  | (A, N 2) | (N 2, A) -> true
+  | (N n1, N n2) when abs (n1 - n2) = 1 -> true
+  | (N 10, J) | (J, N 10) -> true
+  | (J, Q) | (Q, J) -> true
+  | (Q, K) | (K, Q) -> true
+  | _ -> false
+
+let can_play_on c1 c2 =
+  match (c1, c2) with
+  | Suited (r1, s1), Suited (r2, s2) when s1 = s2 && is_adjacent r1 r2 -> true
+  | _ -> false
+
+let top_pairs game_state =
+  let tops = List.filter_map (fun l -> List.nth_opt l 0) game_state.stacks in
+  let rec pairs acc = function
+    | [] | [_] -> List.rev acc
+    | x :: xs -> pairs (List.rev_append (List.map (fun y -> (x, y)) xs) acc) xs
+  in
+  pairs [] tops
+
+let playable_top_pairs game_state =
+  List.filter (fun (c1, c2) -> can_play_on c1 c2) (top_pairs game_state)
+
 let all_suits = [Thorn; Goblet; Sword; Coin];;
 
 let make_deck _ =
@@ -106,7 +131,7 @@ let stash_str stash =
     | Some card -> to_string card
 
 let stack_str cards =
-  String.concat " " (List.map to_string cards)
+  String.concat " " (List.map to_string (List.rev cards))
 
 let show_game gs =
   let stash_msg = String.concat "" ["stash: "; (stash_str gs.stash)] in
@@ -114,6 +139,12 @@ let show_game gs =
   let s_lines = List.map stack_str gs.stacks in
   stash_msg :: List.flatten [f_lines; s_lines];;
 
+  let playable_pairs_to_strings game_state =
+    playable_top_pairs game_state
+    |> List.map (fun (c1, c2) -> to_string c1 ^ " -> " ^ to_string c2)
+  ;;
+
 let g = make_game (make_deck ()) in
 let game_lines = show_game g in
-  print_endline(String.concat "\n" game_lines);;
+let pair_strings = playable_pairs_to_strings g in
+  print_endline(String.concat "\n" (game_lines @ pair_strings));;
